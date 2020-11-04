@@ -1,25 +1,18 @@
 import React from 'react';
-import {StyleSheet} from 'react-native';
-import {TabbedBottomNavigator} from 'screens';
-import {View} from 'react-native';
-import 'react-native-gesture-handler';
-import {NavigationContainer} from '@react-navigation/native';
+import { StyleSheet } from 'react-native';
+import { TabbedBottomNavigator } from 'screens';
+import { NavigationContainer } from '@react-navigation/native';
+import { Provider } from 'react-redux';
+import configureStore from './src/MyRedux/Store.js';
 
-class App extends React.Component {
-  render() {
-    return (
+const myReduxStore = configureStore();
+
+export default App = () => {
+  return (
+    <Provider store={myReduxStore}>
       <NavigationContainer>
-        <TabbedBottomNavigator/>
+        <TabbedBottomNavigator />
       </NavigationContainer>
-    );
-  }
-}
-
-const style = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'red',
-  },
-});
-
-export default App;
+    </Provider>
+  );
+};
