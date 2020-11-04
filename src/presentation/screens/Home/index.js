@@ -68,7 +68,7 @@ const Home = () => {
           >
             {[1,2,3,4,5,6,7,8,9].map(i =>
               (
-                <View key={i} style={styles.suggestionItemsWrap}>
+                <View key={i.toString()} style={styles.suggestionItemsWrap}>
                   {Img(Assets.abc, styles.suggestionItems)}
                 </View>
               )
@@ -83,7 +83,7 @@ const Home = () => {
 
   const renderScrollViewContent = () => {
     const listData = ['a','b','c','d','e','f','g','h','i','j','k','l'];
-    const renderItem = ({item}) => (
+    const renderItem = (item) => (
       <View key={item} style={styles.itemWraper}>
         <Text>item</Text>
       </View>
@@ -100,11 +100,9 @@ const Home = () => {
           <View style={styles.searchbox} />
 
           <View style={styles.listWrap}>
-            {listData.map((item)=>{
-              return(
-                renderItem(item)
-              )
-            })}
+            {listData.map((item) =>
+              renderItem(item)
+            )}
           </View>
 
         </View>

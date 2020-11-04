@@ -3,72 +3,73 @@ import { StyleSheet, View, Animated, ScrollView, Dimensions } from 'react-native
 import Interactable from 'react-native-interactable';
 import LinearGradient from 'react-native-linear-gradient';
 import { screenDimens } from 'constants';
+import { useSelector, useDispatch } from 'react-redux'; //indead of connect()
+import { actions } from './actionCreators.js';
 
-export class CollapsingDrawerLayout extends React.Component {
+export const CollapsingDrawerLayout = (props) => {
 
-  constructor(props) {
-    super(props);
-    this._deltaY = new Animated.Value(0);
-    this.state = {
-      canScroll: false,
-      snappedHighest: false,
-    };
+  //useSelector replaces mapPropsToState()
+  const scrollState = useSelector(state => state.collapsingLayoutReducer.canScroll);
+  const snappedHighestState = useSelector(state => state.collapsingLayoutReducer.snappedHighest);
+  const _deltaY = useSelector(state => state.collapsingLayoutReducer._deltaY);
+  //const _deltaY = new Animated.Value(0);
 
-    //appearance variables
-    this.customContentHeight = screenDimens.height
-    - this.props.bottomNaviHeight
-    - this.props.initialDrawerShowHeight;
-    this.snapPointMid = this.customContentHeight * -1;
-    this.shadowHeight = this.props.shadowOnTopLayer ? 5 : 0;
-    this.scrowViewHeight = screenDimens.height / 2; //TODO correct height to be solved
-    this.customMinimumDragHeight =
-    this.props.minimumDragHeight !== undefined ? this.props.minimumDragHeight : 0;
+  const dispatch = useDispatch();
+  //appearance variables
+  const customContentHeight = screenDimens.height
+  - props.bottomNaviHeight
+  - props.initialDrawerShowHeight;
+  const snapPointMid = customContentHeight * -1;
+  const shadowHeight = props.shadowOnTopLayer ? 5 : 0;
+  const scrowViewHeight = screenDimens.height / 2; //TODO correct height to be solved
+  const customMinimumDragHeight =
+  props.minimumDragHeight !== undefined ? props.minimumDragHeight : 0;
 
-    //snap points variables
-    this.snaps = {
-      low: { id: 'snap_low', val: 0 },
-      mid: { id: 'snap_mid', val: this.snapPointMid / 2 },
-      high: { id: 'snap_high', val: this.snapPointMid - 1 + this.customMinimumDragHeight },
-    };
-  }
+  //snap points variables
+  const snaps = {
+    low: { id: 'snap_low', val: 0 },
+    mid: { id: 'snap_mid', val: snapPointMid / 2 },
+    high: { id: 'snap_high', val: snapPointMid - 1 + customMinimumDragHeight },
+  };
 
-  onSnap = (event) => {
+  const onSnap = (event) => {
     const { id } = event.nativeEvent;
-    const canScroll = id === this.snaps.high.id;
-    this.setState({ canScroll: canScroll});
-  }
+    const canScroll = id === snaps.high.id;
+    dispatch(actions.setScrollability(canScroll));
+  };
 
-  onScroll = (event) => {
+  const onScroll = (event) => {
     const { contentOffset } = event.nativeEvent;
     if (contentOffset.y <= 0) {
-      this.setState({ canScroll: false });
+      dispatch(actions.setSnappedHighest(false));
     }
-  }
+  };
 
-  onDrag = (event) => {
+  const onDrag = (event) => {
 
     const { state, targetSnapPointId } = event.nativeEvent;
-    if (state === 'end' && targetSnapPointId === this.snaps.mid.id) {
-      if (this.props.onSnappedToMiddle) {
-        this.props.onSnappedToMiddle();
+    if (state === 'end' && targetSnapPointId === snaps.mid.id) {
+      if (props.onSnappedToMiddle) {
+        props.onSnappedToMiddle();
       }
-    } else if (state === 'end' && targetSnapPointId === this.snaps.low.id) {
-      if (this.props.onSnappedToBottom) {
-        this.props.onSnappedToBottom();
+    } else if (state === 'end' && targetSnapPointId === snaps.low.id) {
+      if (props.onSnappedToBottom) {
+        props.onSnappedToBottom();
       }
     }
-  }
+  };
 
-  renderFadingView = (content) => {
+  const renderFadingView = (content) => {
+    console.log('deltaY @renderFadingView', _deltaY);
     return (
       <Animated.View
         style={{
-          opacity: this._deltaY.interpolate({
+          opacity: _deltaY.interpolate({
             inputRange: [-150, 0],
             outputRange: [0, 1],
           }),
           transform: [
-            { scale: this._deltaY.interpolate({
+            { scale: _deltaY.interpolate({
               inputRange: [-150, -150, 0, 0],
               outputRange: [0, 0, 1, 1],
             }),
@@ -79,104 +80,101 @@ export class CollapsingDrawerLayout extends React.Component {
         {content()}
       </Animated.View>
     );
-  }
+  };
 
-  render() {
-    const snaps = this.snaps;
-    return (
-      <View style={styles.container}>
-        <View
-          style={[styles.layerUnderDrawer,
-            { height: this.customContentHeight }
-          ]}
+  return (
+    <View style={styles.container}>
+      <View
+        style={[styles.layerUnderDrawer,
+          { height: customContentHeight },
+        ]}
+      >
+        <Animated.View
+          style={{
+            transform: [
+              {
+                translateY: _deltaY.interpolate({
+                  inputRange: [snapPointMid, snapPointMid, 0, 0],
+                  outputRange: [snapPointMid / 1.8 + 15, snapPointMid / 1.8 + 15, 0, 0],
+                  // first 2 numbers set to be half of snapPointMid
+                  // so that the target only moves half of the original distance
+                  // i.e. it does not get 'pushed' all the way the whole distance
+                  //the effect is that the target looks as if it remains in center
+                }),
+              },
+            ],
+          }}
         >
-          <Animated.View
-            style={{
-              transform: [
-                {
-                  translateY: this._deltaY.interpolate({
-                    inputRange: [this.snapPointMid, this.snapPointMid, 0, 0],
-                    outputRange: [this.snapPointMid / 1.8 + 15, this.snapPointMid / 1.8 + 15, 0, 0]
-                    // first 2 numbers set to be half of snapPointMid
-                    // so that the target only moves half of the original distance
-                    // i.e. it does not get 'pushed' all the way the whole distance
-                    //the effect is that the target looks as if it remains in center
-                  })
-                },
-              ],
-            }}
-          >
-            <View>
-              {this.props.collapsingBanner()}
-            </View>
+          <View>
+            {props.collapsingBanner()}
+          </View>
 
-            <View style={styles.fadingViewsContainer}>
-              {this.renderFadingView(this.props.leftFadeView)}
-              {this.renderFadingView(this.props.rightFadeView)}
-            </View>
-          </Animated.View>
-
-        </View>
-        <View>
-
-          <Interactable.View
-            style={{ marginTop: -this.shadowHeight - this.customMinimumDragHeight}}
-            verticalOnly
-            snapPoints={[
-              { y: this.snaps.low.val, id: this.snaps.low.id },
-              { y: this.snaps.high.val, id: this.snaps.high.id },
-              { y: this.snaps.mid.val, id: this.snaps.mid.id },
-            ]}
-            boundaries={{
-              top: this.snapPointMid + this.shadowHeight,
-              bottom: this.customMinimumDragHeight,
-            }}
-            onSnap={this.onSnap}
-            onDrag={this.onDrag}
-            animatedValueY={this._deltaY}
-            showsVerticalScrollIndicator={false}
-          >
-
-            <If condition={this.props.shadowOnTopLayer}>
-              <LinearGradient
-                  colors={['transparent', 'rgba(24,24,24,0.4)','rgba(45,45,45,0.3)']}
-                  style={
-                    [styles.shadow,
-                      this.props.shadowRadius?
-                      { borderTopLeftRadius:this.props.shadowRadius,
-                        borderTopRightRadius:this.props.shadowRadius}:
-                      styles.flatborder
-                    ]}>
-              </LinearGradient>
-            </If>
-            <View style={[styles.scrollviewHeader]}>
-              {this.props.scrollViewheader()}
-            </View>
-
-            <ScrollView
-              bounces={false}
-              scrollEnabled={this.state.canScroll}
-              onScroll={this.onScroll}
-              showsVerticalScrollIndicator={false}
-              style={[
-                { height: this.scrowViewHeight },
-                styles.scrollview,
-              ]}
-            >
-
-              <View style={[styles.scrollviewContent]}>
-                {this.props.scrollViewContent()}
-                <View style={styles.scrollviewBottomDummy} />
-              </View>
-
-            </ScrollView>
-          </Interactable.View>
-        </View>
+          <View style={styles.fadingViewsContainer}>
+            {renderFadingView(props.leftFadeView)}
+            {renderFadingView(props.rightFadeView)}
+          </View>
+        </Animated.View>
 
       </View>
-    );
-  }
-}
+      <View>
+
+        <Interactable.View
+          style={{ marginTop: -shadowHeight - customMinimumDragHeight }}
+          verticalOnly
+          snapPoints={[
+            { y: snaps.low.val, id: snaps.low.id },
+            { y: snaps.high.val, id: snaps.high.id },
+            { y: snaps.mid.val, id: snaps.mid.id },
+          ]}
+          boundaries={{
+            top: snapPointMid + shadowHeight,
+            bottom: customMinimumDragHeight,
+          }}
+          onSnap={onSnap}
+          onDrag={onDrag}
+          animatedValueY={_deltaY}
+          showsVerticalScrollIndicator={false}
+        >
+
+          <If condition={props.shadowOnTopLayer}>
+            <LinearGradient
+              colors={['transparent', 'rgba(24,24,24,0.4)', 'rgba(45,45,45,0.3)']}
+              style={
+                [styles.shadow,
+                  props.shadowRadius ?
+                    { borderTopLeftRadius: props.shadowRadius,
+                      borderTopRightRadius: props.shadowRadius } :
+                    styles.flatborder,
+                ]}
+            />
+          </If>
+          <View style={[styles.scrollviewHeader]}>
+            {props.scrollViewheader()}
+          </View>
+
+          <ScrollView
+            bounces={false}
+            scrollEnabled={scrollState}
+            onScroll={onScroll}
+            showsVerticalScrollIndicator={false}
+            style={[
+              { height: scrowViewHeight },
+              styles.scrollview,
+            ]}
+          >
+
+            <View style={[styles.scrollviewContent]}>
+              {props.scrollViewContent()}
+              <View style={styles.scrollviewBottomDummy} />
+            </View>
+
+          </ScrollView>
+        </Interactable.View>
+      </View>
+
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -184,7 +182,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   layerUnderDrawer: {
-    //height: this.defaultContentHeight,
+    //height: defaultContentHeight,
     zIndex: 100,
     alignItems: 'center',
     justifyContent: 'center',
