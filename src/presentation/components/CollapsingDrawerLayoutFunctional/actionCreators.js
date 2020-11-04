@@ -1,6 +1,5 @@
 export const actions = {
   setDeltaY(newDeltaY) {
-    console.log('hey');
     return { type: 'SETDELTAY', deltaY: newDeltaY };
   },
   setScrollability(isScrollable) {

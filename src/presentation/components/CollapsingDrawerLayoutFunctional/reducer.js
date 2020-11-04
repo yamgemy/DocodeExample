@@ -8,7 +8,7 @@ const initialState = {
 //returns a new state as a new js object
 export const reducer = (state = initialState, action) => {
   switch (action.type) {
-    case 'SETDELTAY':
+    case 'SETDELTAY': //never called
       return { ...state, _deltaY: action.deltaY };
     case 'SETSCROLLABILITY':
       return { ...state, canScroll: action.scrollBoolean };

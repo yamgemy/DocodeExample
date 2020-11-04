@@ -90,7 +90,7 @@ const Home = () => {
     );
 
     const seperator = () => (
-      <View style={{backgroundColor:'black',height:1}}/>
+      <View style={{ backgroundColor: 'black', height: 1}} />
     );
 
     return (
@@ -206,27 +206,27 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: 'white',
     height: 40,
-    width: '96%'
+    width: '96%',
   },
   listWrap: {
     borderRadius: 20,
     backgroundColor: 'white',
     marginTop: '6%',
     width: '96%',
-    padding: '5%'
+    padding: '5%',
   },
   mainListMargins: {
     marginLeft: '3%',
     marginRight: '3%',
-    marginTop: '6%'
+    marginTop: '6%',
   },
-  itemWraper:{
-    height:30,
-    justifyContent:'center',
-    margin:2,
-    borderBottomColor:'black',
-    borderBottomWidth: 0.7
-  }
+  itemWraper: {
+    height: 30,
+    justifyContent: 'center',
+    margin: 2,
+    borderBottomColor: 'black',
+    borderBottomWidth: 0.7,
+  },
 });
 
 export default observer(() => Home());
